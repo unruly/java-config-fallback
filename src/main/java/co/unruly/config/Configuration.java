@@ -5,10 +5,17 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
+
+import static co.unruly.config.ConfigurationSource.FIND_NOTHING;
 
 public class Configuration {
 
-    private ConfigurationSource func = (key) -> null;
+    private final ConfigurationSource func;
+
+    public Configuration() {
+        this(FIND_NOTHING);
+    }
 
     public Configuration(ConfigurationSource map) {
         this.func = map;
@@ -22,9 +29,8 @@ public class Configuration {
         return Optional.ofNullable(func.get(s));
     }
 
-    public Configuration or(ConfigurationSource File) {
-        this.func = this.func.or(File);
-        return this;
+    public Configuration or(ConfigurationSource next) {
+        return new Configuration(this.func.or(next));
     }
 
     public static ConfigurationSource map(Map<String, String> map){
@@ -42,10 +48,16 @@ public class Configuration {
 
         return properties::getProperty;
     }
+
+    public static Configuration of(ConfigurationSource... sources) {
+        return new Configuration(Stream.of(sources).reduce(FIND_NOTHING, ConfigurationSource::or));
+    }
 }
 
 @FunctionalInterface
 interface ConfigurationSource {
+
+    ConfigurationSource FIND_NOTHING = key -> null;
 
     String get(String key);
 

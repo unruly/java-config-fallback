@@ -46,6 +46,19 @@ public class ConfigurationTest {
         assertThat(config.get("some-variable"), is(Optional.of("blah")));
     }
 
+    @Test
+    public void shouldSupportVarargsOrdering() {
+        Map<String, String> input = new HashMap<>();
+        input.put("some-variable", "dfsadad");
+
+        Configuration config = Configuration.of(
+            properties("src/test/resources/test.properties"),
+            map(input)
+        );
+
+        assertThat(config.get("some-variable"), is(Optional.of("blah")));
+    }
+
     @Test(expected = ConfigurationSetUpException.class)
     public void shouldThrowExceptionIfProblemOpeningPropertiesFile() {
         Configuration

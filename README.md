@@ -13,8 +13,7 @@ Map<String, String> credentials = new HashMap<>();
 credentials.put("username","foo");
 credentials.put("password","this-is-a-secret!");
 
-Configuration config = Configuration
-  .from(map(credentials));
+Configuration config = Configuration.of(map(credentials));
 
 String username = config.get("username"); // Optional[foo]
 String password = config.get("password"); // Optional[this-is-a-secret!]
@@ -26,9 +25,10 @@ Map<String, String> credentials = new HashMap<>();
 credentials.put("username","foo");
 credentials.put("password","this-is-a-secret!");
 
-Configuration config = Configuration
-  .from(file("/etc/my-app/config.properties")) // password=new-password
-  .or(map(credentials));
+Configuration config = Configuration.of(
+  file("/etc/my-app/config.properties"),  // password=new-password
+  map(credentials)
+);
 
 String username = config.get("username"); // Optional[foo]
 String password = config.get("password"); // Optional[new-password]
