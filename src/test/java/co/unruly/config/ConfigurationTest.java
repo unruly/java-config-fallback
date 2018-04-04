@@ -16,9 +16,9 @@ public class ConfigurationTest {
 
     @Test
     public void shouldReturnEmptyOptionalIfValueNotFound() {
-        Map<String, String> map = Collections.emptyMap();
+        Map<String, String> input = Collections.emptyMap();
 
-        Configuration config = Configuration.from(map::get);
+        Configuration config = Configuration.from(map(input));
 
         assertThat(config.get("some-variable"), is(Optional.empty()));
     }
@@ -29,7 +29,7 @@ public class ConfigurationTest {
 
         input.put("some-variable", "dfsadad");
 
-        Configuration config = Configuration.from(input::get);
+        Configuration config = Configuration.from(map(input));
 
         assertThat(config.get("some-variable"), is(Optional.of("dfsadad")));
     }

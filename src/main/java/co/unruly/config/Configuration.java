@@ -44,16 +44,14 @@ public class Configuration {
     }
 }
 
-
+@FunctionalInterface
 interface ConfigurationSource {
 
     Object get(String key);
 
     default ConfigurationSource or(ConfigurationSource source) {
-        return (key) -> {
-            return Optional
-                .ofNullable(this.get(key))
-                .orElse(source.get(key));
-        };
+        return (key) -> Optional
+            .ofNullable(this.get(key))
+            .orElse(source.get(key));
     }
 }
