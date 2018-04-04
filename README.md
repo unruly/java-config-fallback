@@ -1,5 +1,7 @@
 # java-config-fallback
 
+[![Build Status](https://travis-ci.org/unruly/java-config-fallback.svg?branch=master)](https://travis-ci.org/unruly/java-config-fallback)
+
 A lightweight library to facilitate extracting configuration from code into configuration files.
 
 ## Usage
