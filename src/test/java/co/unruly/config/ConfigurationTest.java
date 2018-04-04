@@ -46,4 +46,10 @@ public class ConfigurationTest {
         assertThat(config.get("some-variable"), is(Optional.of("blah")));
     }
 
+    @Test(expected = ConfigurationSetUpException.class)
+    public void shouldThrowExceptionIfProblemOpeningPropertiesFile() {
+        Configuration
+            .from(properties("src/test/resources/doesNotExist.properties"));
+    }
+
 }

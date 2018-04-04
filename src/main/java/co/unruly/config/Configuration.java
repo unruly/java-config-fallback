@@ -37,7 +37,7 @@ public class Configuration {
         try {
             properties.load(new FileReader(s));
         } catch (IOException e) {
-            e.printStackTrace();
+           throw new ConfigurationSetUpException(e);
         }
 
         return properties::getProperty;
