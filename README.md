@@ -7,7 +7,7 @@ A lightweight library to facilitate extracting configuration from code into conf
 ### With a basic in-code Map<>
 
 ```java
-Map<String, Object> credentials = new HashMap<>();
+Map<String, String> credentials = new HashMap<>();
 credentials.put("username","foo");
 credentials.put("password","this-is-a-secret!");
 
@@ -20,7 +20,7 @@ String password = config.get("password"); // Optional[this-is-a-secret!]
 ### Using a .properties file, falling back to a Map<>
 
 ```java
-Map<String, Object> credentials = new HashMap<>();
+Map<String, String> credentials = new HashMap<>();
 credentials.put("username","foo");
 credentials.put("password","this-is-a-secret!");
 

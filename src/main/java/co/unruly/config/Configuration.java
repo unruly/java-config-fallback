@@ -18,7 +18,7 @@ public class Configuration {
         return new Configuration(func);
     }
 
-    public Optional<?> get(String s) {
+    public Optional<String> get(String s) {
         return Optional.ofNullable(func.get(s));
     }
 
@@ -47,7 +47,7 @@ public class Configuration {
 @FunctionalInterface
 interface ConfigurationSource {
 
-    Object get(String key);
+    String get(String key);
 
     default ConfigurationSource or(ConfigurationSource source) {
         return (key) -> Optional
