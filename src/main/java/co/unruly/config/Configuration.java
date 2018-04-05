@@ -42,9 +42,7 @@ public class Configuration {
 
         try {
             properties.load(new FileReader(s));
-        } catch (IOException e) {
-           throw new ConfigurationSetUpException(e);
-        }
+        } catch (IOException e) {}
 
         return properties::getProperty;
     }
