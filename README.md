@@ -26,7 +26,7 @@ credentials.put("username","foo");
 credentials.put("password","this-is-a-secret!");
 
 Configuration config = Configuration.of(
-  file("/etc/my-app/config.properties"),  // password=new-password
+  properties("/etc/my-app/config.properties"),  // password=new-password
   map(credentials)
 );
 
