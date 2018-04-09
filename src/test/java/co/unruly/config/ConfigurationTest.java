@@ -1,5 +1,6 @@
 package co.unruly.config;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -10,6 +11,7 @@ import static co.unruly.config.Configuration.map;
 import static co.unruly.config.Configuration.properties;
 import static co.unruly.matchers.OptionalMatchers.contains;
 import static co.unruly.matchers.OptionalMatchers.empty;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -22,7 +24,7 @@ public class ConfigurationTest {
 
         Configuration config = Configuration.from(map(input));
 
-        assertThat(config.get("some-variable"), empty());
+        assertThat(config.get("some-variable"), is(empty()));
     }
 
     @Test
@@ -66,11 +68,11 @@ public class ConfigurationTest {
         Configuration config = Configuration
             .from(properties("src/test/resources/doesNotExist.properties"));
 
-        assertThat(config.get("anything"), empty());
+        assertThat(config.get("anything"), is(empty()));
     }
 
     @Test
-    public void shouldNotCallsubsequentSourcesIfEarlierSourceProvidesValue() {
+    public void shouldNotCallSubsequentSourcesIfEarlierSourceProvidesValue() {
         Map<String, String> input = new HashMap<>();
         input.put("some-variable", "dfsadad");
 
