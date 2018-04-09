@@ -11,6 +11,8 @@ import static co.unruly.config.Configuration.properties;
 import static co.unruly.matchers.OptionalMatchers.contains;
 import static co.unruly.matchers.OptionalMatchers.empty;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class ConfigurationTest {
 
@@ -65,6 +67,22 @@ public class ConfigurationTest {
             .from(properties("src/test/resources/doesNotExist.properties"));
 
         assertThat(config.get("anything"), empty());
+    }
+
+    @Test
+    public void shouldNotCallsubsequentSourcesIfEarlierSourceProvidesValue() {
+        Map<String, String> input = new HashMap<>();
+        input.put("some-variable", "dfsadad");
+
+        ConfigurationSource secondarySource = mock(ConfigurationSource.class);
+
+        Configuration config = Configuration.of(
+                map(input),
+                secondarySource
+        );
+
+        assertThat(config.get("some-variable"), contains("dfsadad"));
+        verifyZeroInteractions(secondarySource);
     }
 
 }

@@ -12,6 +12,6 @@ public interface ConfigurationSource {
     default ConfigurationSource or(ConfigurationSource source) {
         return (key) -> Optional
             .ofNullable(this.get(key))
-            .orElse(source.get(key));
+            .orElseGet(() -> source.get(key));
     }
 }
