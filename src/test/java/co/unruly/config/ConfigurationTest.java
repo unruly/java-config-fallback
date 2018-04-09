@@ -5,11 +5,11 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static co.unruly.config.Configuration.map;
 import static co.unruly.config.Configuration.properties;
-import static org.hamcrest.core.Is.is;
+import static co.unruly.matchers.OptionalMatchers.contains;
+import static co.unruly.matchers.OptionalMatchers.empty;
 import static org.junit.Assert.assertThat;
 
 public class ConfigurationTest {
@@ -20,7 +20,7 @@ public class ConfigurationTest {
 
         Configuration config = Configuration.from(map(input));
 
-        assertThat(config.get("some-variable"), is(Optional.empty()));
+        assertThat(config.get("some-variable"), empty());
     }
 
     @Test
@@ -31,7 +31,7 @@ public class ConfigurationTest {
 
         Configuration config = Configuration.from(map(input));
 
-        assertThat(config.get("some-variable"), is(Optional.of("dfsadad")));
+        assertThat(config.get("some-variable"), contains("dfsadad"));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ConfigurationTest {
             .from(properties("src/test/resources/test.properties"))
             .or(map(input));
 
-        assertThat(config.get("some-variable"), is(Optional.of("blah")));
+        assertThat(config.get("some-variable"), contains("blah"));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class ConfigurationTest {
             map(input)
         );
 
-        assertThat(config.get("some-variable"), is(Optional.of("blah")));
+        assertThat(config.get("some-variable"), contains("blah"));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class ConfigurationTest {
         Configuration config = Configuration
             .from(properties("src/test/resources/doesNotExist.properties"));
 
-        assertThat(config.get("anything"), is(Optional.empty()));
+        assertThat(config.get("anything"), empty());
     }
 
 }
