@@ -4,6 +4,16 @@
 
 A lightweight library to facilitate extracting configuration from code into configuration files.
 
+## Install from Maven Central
+
+```xml
+<dependency>
+    <groupId>co.unruly</groupId>
+    <artifactId>java-config-fallback</artifactId>
+    <version>0.1.4</version>
+</dependency>
+```
+
 ## Usage
 
 ### With a basic in-code Map<>
