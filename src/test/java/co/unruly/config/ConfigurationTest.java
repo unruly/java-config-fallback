@@ -1,12 +1,12 @@
 package co.unruly.config;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static co.unruly.config.Configuration.environment;
 import static co.unruly.config.Configuration.map;
 import static co.unruly.config.Configuration.properties;
 import static co.unruly.matchers.OptionalMatchers.contains;
@@ -85,6 +85,26 @@ public class ConfigurationTest {
 
         assertThat(config.get("some-variable"), contains("dfsadad"));
         verifyZeroInteractions(secondarySource);
+    }
+
+    // VARIABLE=foo is set via maven-surefire-plugin in the POM
+
+    @Test
+    public void shouldUseEnvironmentVariables_ToUpperCase() {
+        Configuration config = Configuration.of(
+            environment()
+        );
+
+        assertThat(config.get("variable"), contains("foo"));
+    }
+
+    @Test
+    public void shouldUseEnvironmentVariables_ExactCase() {
+        Configuration config = Configuration.of(
+                environment()
+        );
+
+        assertThat(config.get("VARIABLE"), contains("foo"));
     }
 
 }

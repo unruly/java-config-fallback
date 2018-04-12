@@ -47,6 +47,10 @@ public class Configuration {
         return properties::getProperty;
     }
 
+    public static ConfigurationSource environment() {
+        return (key) -> System.getenv(key.toUpperCase());
+    }
+
     public static Configuration of(ConfigurationSource... sources) {
         return new Configuration(Stream.of(sources).reduce(FIND_NOTHING, ConfigurationSource::or));
     }

@@ -10,13 +10,31 @@ A lightweight library to facilitate extracting configuration from code into conf
 <dependency>
     <groupId>co.unruly</groupId>
     <artifactId>java-config-fallback</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 
 ## Usage
 
-### With a basic in-code Map<>
+```java
+Map<String, String> credentials = new HashMap<>();
+credentials.put("username","foo");
+credentials.put("password","this-is-a-secret!");
+
+Configuration config = Configuration.of(
+    properties("/etc/my-app-config.properties"),
+    map(credentials)
+);
+
+// look in properties file first, else look in the map.
+String username = config.get("username"); 
+```
+
+## Configuration Sources
+
+### In-code map
+
+`map(Map<String, String>)` - an in-code map of keys to values
 
 ```java
 Map<String, String> credentials = new HashMap<>();
@@ -28,23 +46,32 @@ Configuration config = Configuration.of(map(credentials));
 String username = config.get("username"); // Optional[foo]
 String password = config.get("password"); // Optional[this-is-a-secret!]
 ```
-### Using a .properties file, falling back to a Map<>
+
+### Properties file
+
+`properties(String pathToFile)` - a .properties file in the filesystem
 
 ```java
-Map<String, String> credentials = new HashMap<>();
-credentials.put("username","foo");
-credentials.put("password","this-is-a-secret!");
-
 Configuration config = Configuration.of(
-  properties("/etc/my-app/config.properties"),  // password=new-password
-  map(credentials)
+    properties("/etc/my-app/config.properties"),  // password=new-password
 );
 
-String username = config.get("username"); // Optional[foo]
 String password = config.get("password"); // Optional[new-password]
 ```
 
-## Supported ConfigurationSource types
+### Environment variables
 
- * `map(Map<>)` - an in-code map of keys to values
- * `properties(String pathToFile)` - a .properties file in the filesystem
+`environment()` - environment variables set for this application.
+
+This assumes environment variables are UPPER_CASE and converts queried keys to UPPER_CASE before lookup.
+
+```java
+// With VARIABLE=foo set
+
+Configuration config = Configuration.of(
+    environment()
+);
+
+String password = config.get("VARIABLE"); // Optional[foo]
+String password = config.get("variable"); // Same as above
+```
