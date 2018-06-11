@@ -25,6 +25,14 @@ public class Configuration {
         return Optional.ofNullable(func.get(s));
     }
 
+    public String get(String s, String defaultValue) {
+        return get(s).orElse(defaultValue);
+    }
+
+    public String require(String s) {
+        return get(s).orElseThrow(() -> new ConfigurationMissing(s));
+    }
+
     public Configuration or(ConfigurationSource next) {
         return new Configuration(this.func.or(next));
     }
