@@ -21,10 +21,6 @@ public class Configuration {
         this.func = map;
     }
 
-    public static Configuration from(ConfigurationSource func) {
-        return new Configuration(func);
-    }
-
     public Optional<String> get(String s) {
         return Optional.ofNullable(func.get(s));
     }
@@ -33,9 +29,17 @@ public class Configuration {
         return new Configuration(this.func.or(next));
     }
 
+    public static Configuration from(ConfigurationSource func) {
+        return new Configuration(func);
+    }
+
+    public static Configuration of(ConfigurationSource... sources) {
+        return new Configuration(Stream.of(sources).reduce(FIND_NOTHING, ConfigurationSource::or));
+    }
+
     public static ConfigurationSource map(Map<String, String> map){
         return map::get;
-    };
+    }
 
     public static ConfigurationSource properties(String s) {
         Properties properties = new Properties();
@@ -46,13 +50,12 @@ public class Configuration {
 
         return properties::getProperty;
     }
+    public static ConfigurationSource properties(Properties properties) {
+        return properties::getProperty;
+    }
 
     public static ConfigurationSource environment() {
         return (key) -> System.getenv(key.toUpperCase());
-    }
-
-    public static Configuration of(ConfigurationSource... sources) {
-        return new Configuration(Stream.of(sources).reduce(FIND_NOTHING, ConfigurationSource::or));
     }
 }
 
