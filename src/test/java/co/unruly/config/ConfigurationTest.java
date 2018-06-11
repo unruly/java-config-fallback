@@ -28,6 +28,24 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldReturnDefaultValueIfProvidedAndValueNotFound() {
+        Map<String, String> input = Collections.emptyMap();
+
+        Configuration config = Configuration.from(map(input));
+
+        assertThat(config.get("some-variable", "default-value"), is("default-value"));
+    }
+
+    @Test(expected = ConfigurationMissing.class)
+    public void shouldThrowIfRequiredValueNotFound() {
+        Map<String, String> input = Collections.emptyMap();
+
+        Configuration config = Configuration.from(map(input));
+
+        config.require("some-variable");
+    }
+
+    @Test
     public void shouldReturnOptionalIfValueIsPresent() {
         Map<String, String> input = new HashMap<>();
 
