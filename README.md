@@ -26,8 +26,21 @@ Configuration config = Configuration.of(
     map(credentials)
 );
 
-// look in properties file first, else look in the map.
-String username = config.get("username"); 
+// look in properties file first, else look in the map,
+// and if still not found, return Optional.empty()
+Optional<String> username = config.get("username"); 
+```
+
+You can also provide a use-site default value:
+
+```java
+String username = config.get("username", "Titus Andromedon");
+```
+
+Or state that a value is _required_, and throw a `ConfigurationMissing` exception if if is not defined:
+
+```java
+String username = config.require("username");
 ```
 
 ## Configuration Sources
