@@ -1,5 +1,7 @@
 package co.unruly.config;
 
+import com.amazonaws.services.secretsmanager.AWSSecretsManager;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
@@ -42,7 +44,8 @@ public class Configuration {
     }
 
     public static Configuration of(ConfigurationSource... sources) {
-        return new Configuration(Stream.of(sources).reduce(FIND_NOTHING, ConfigurationSource::or));
+        return new Configuration(Stream.of(sources)
+                                       .reduce(FIND_NOTHING, ConfigurationSource::or));
     }
 
     public static ConfigurationSource map(Map<String, String> map){
@@ -64,6 +67,14 @@ public class Configuration {
 
     public static ConfigurationSource environment() {
         return (key) -> System.getenv(key.toUpperCase());
+    }
+
+    public static ConfigurationSource secretsManager(String secretName, String region) {
+        return new SecretsManager(secretName, region)::get;
+    }
+
+    public static ConfigurationSource secretsManager(String secretName, String region, AWSSecretsManager client) {
+         return new SecretsManager(secretName, region, client)::get;
     }
 }
 
