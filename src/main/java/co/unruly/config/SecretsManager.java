@@ -11,12 +11,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SecretsManager implements ConfigurationSource {
 
-    private String secretName;
-    private String region;
-    private AWSSecretsManager client;
+    private final String secretName;
+    private final String region;
+    private final AWSSecretsManager client;
     private Map<String, String> credentials;
 
     public SecretsManager(String secretName, String region) {
@@ -33,9 +34,22 @@ public class SecretsManager implements ConfigurationSource {
 
     @Override
     public String get(String key) {
-        credentials = fetchCredentials();
+        if (credentials == null) {
+            credentials = fetchCredentials();
+        }
+
         return credentials.get(key);
     }
+
+    private Map<String, String> fetchCredentials() {
+        final Map<String, String> emptyResults = new HashMap<>();
+
+        return getSecretValueFromRequest()
+                .map(GetSecretValueResult::getSecretString)
+                .flatMap(this::parseJSON)
+                .orElse(emptyResults);
+    }
+
 
     private AWSSecretsManager setupClient() {
         return AWSSecretsManagerClientBuilder.standard()
@@ -43,44 +57,30 @@ public class SecretsManager implements ConfigurationSource {
                 .build();
     }
 
-    private GetSecretValueResult getSecretValueFromRequest() {
-        GetSecretValueRequest request = createRequest();
-
-        return getSecretValue(request);
-    }
-
-
-    private Map<String, String> fetchCredentials() {
-
-        GetSecretValueResult secretValue = getSecretValueFromRequest();
-
-        if (secretValue.getSecretString() != null) {
-            try {
-                return parseJSON(secretValue);
-            } catch (IOException e) {}
-        }
-
-        return new HashMap<>();
+    private Optional<GetSecretValueResult> getSecretValueFromRequest() {
+        return getSecretValue(createRequest());
     }
 
     private GetSecretValueRequest createRequest() {
         return new GetSecretValueRequest().withSecretId(this.secretName);
     }
 
-    private GetSecretValueResult getSecretValue(GetSecretValueRequest getSecretValueRequest) {
-        GetSecretValueResult result;
-
+    private Optional<GetSecretValueResult> getSecretValue(GetSecretValueRequest getSecretValueRequest) {
         try {
-            result = client.getSecretValue(getSecretValueRequest);
+            return Optional.ofNullable(client.getSecretValue(getSecretValueRequest));
         } catch (ResourceNotFoundException e) {
-            result = new GetSecretValueResult();
+            return Optional.empty();
         }
-
-        return result;
     }
 
+    private Optional<Map<String, String>> parseJSON(String jsonInput) {
+        final ObjectMapper mapper = new ObjectMapper();
+        final TypeReference<Map<String, String>> parseAsMap = new TypeReference<Map<String, String>>() {};
 
-    private Map<String, String> parseJSON(GetSecretValueResult getSecretValueResult) throws IOException {
-        return new ObjectMapper().readValue(getSecretValueResult.getSecretString(), new TypeReference<Map<String, String>>(){});
+        try {
+            return Optional.ofNullable(mapper.readValue(jsonInput, parseAsMap));
+        } catch (IOException e) {
+            return Optional.empty();
+        }
     }
 }

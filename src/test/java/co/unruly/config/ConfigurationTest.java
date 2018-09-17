@@ -1,8 +1,6 @@
 package co.unruly.config;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -10,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static co.unruly.config.Configuration.*;
+import static co.unruly.config.SecretsManagerTest.storeSecret;
 import static co.unruly.matchers.OptionalMatchers.contains;
 import static co.unruly.matchers.OptionalMatchers.empty;
 import static org.hamcrest.Matchers.is;
@@ -77,22 +76,13 @@ public class ConfigurationTest {
         assertThat(config.get("some-variable"), contains("blah"));
     }
 
-
     @Test
-    public void shouldFallBackToNextConfigurationSource() {
-
-        AWSSecretsManager awsMockClient = mock(AWSSecretsManager.class);
-        GetSecretValueResult mockResult = mock(GetSecretValueResult.class);
-
-        when(awsMockClient.getSecretValue(any(GetSecretValueRequest.class))).thenReturn(mockResult);
-        when(mockResult.getSecretString()).thenReturn("");
-
+    public void shouldFallBackToNextConfigurationSource_Map() {
         Map<String, String> input = new HashMap<>();
         input.put("map-scenario-user", "from-a-map");
 
         Configuration config = Configuration.of(
-                properties("src/test/resources/test.properties"),
-                secretsManager("some_secret", "eu-west-1", awsMockClient),
+                map(new HashMap<>()),
                 map(input)
         );
 
@@ -100,26 +90,23 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void shouldFallBackToAWSSecretsManagerConfigurationSource() {
-
-        String unparsedJSON = "{\"secrets-scenario-user\": \"from-secrets-manager\", \"pass\": \"some_pass\"}";
-
-        AWSSecretsManager awsMockClient = mock(AWSSecretsManager.class);
-        GetSecretValueResult mockResult = mock(GetSecretValueResult.class);
-
-        when(awsMockClient.getSecretValue(any(GetSecretValueRequest.class))).thenReturn(mockResult);
-        when(mockResult.getSecretString()).thenReturn(unparsedJSON);
-
-        Map<String, String> input = new HashMap<>();
-        input.put("map-scenario-user", "from-a-map");
-
+    public void shouldFallBackToNextConfigurationSource_Properties() {
         Configuration config = Configuration.of(
-                properties("src/test/resources/test.properties"),
-                secretsManager("some_secret", "eu-west-1", awsMockClient),
-                map(input)
+                properties("this-file-does-not-exist.properties"),
+                properties("src/test/resources/test.properties")
         );
 
-        assertThat(config.get("secrets-scenario-user"), contains("from-secrets-manager"));
+        assertThat(config.get("some-variable"), contains("blah"));
+    }
+
+    @Test
+    public void shouldFallBackToNextConfigurationSource_SecretsManager() {
+        Configuration config = Configuration.of(
+                secretsManager("my-secret-1", "eu-west-1", storeSecret("not actually JSON")),
+                secretsManager("my-secret-2", "eu-west-1", storeSecret("{\"my-key\":\"my-value\"}"))
+        );
+
+        assertThat(config.get("my-key"), contains("my-value"));
     }
 
     @Test
@@ -167,36 +154,11 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void shouldReadFromSecretsManager() {
-        String unparsedJSON = "{\"user\": \"some_user\", \"pass\": \"some_pass\"}";
-
-        AWSSecretsManager awsMockClient = mock(AWSSecretsManager.class);
-        GetSecretValueResult mockResult = mock(GetSecretValueResult.class);
-
-        when(awsMockClient.getSecretValue(any(GetSecretValueRequest.class))).thenReturn(mockResult);
-        when(mockResult.getSecretString()).thenReturn(unparsedJSON);
-
-        Configuration config = Configuration.of(
-                Configuration.secretsManager("some_secret", "eu-west-1", awsMockClient)
-        );
-
-        assertThat(config.get("user"), contains("some_user"));
-        assertThat(config.get("pass"), contains("some_pass"));
-    }
-
-    @Test
     public void shouldReturnEmptyOptionalIfNotFoundInSecretsManager() {
-        String region = "eu-west-1";
-
-        AWSSecretsManager awsMockClient = mock(AWSSecretsManager.class);
-        GetSecretValueResult mockResult = mock(GetSecretValueResult.class);
-
-        when(awsMockClient.getSecretValue(any(GetSecretValueRequest.class))).thenReturn(mockResult);
-        when(mockResult.getSecretString()).thenReturn("");
-
+        AWSSecretsManager awsMockClient = storeSecret("");
 
         Configuration config = Configuration.of(
-                secretsManager("some_secret_that_does_not_exist", region)
+                secretsManager("some_secret_that_does_not_exist", "eu-west-1", awsMockClient)
         );
 
         assertThat(config.get("user"), is(empty()));
