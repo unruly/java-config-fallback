@@ -3,7 +3,7 @@
 
     <groupId>co.unruly</groupId>
     <artifactId>java-config-fallback</artifactId>
-    <version>0.1.7-SNAPSHOT</version>
+    <version>0.1.8-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>java-config-fallback</name>
