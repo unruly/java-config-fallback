@@ -1,53 +1,83 @@
 # java-config-fallback
 
 [![Build Status](https://travis-ci.org/unruly/java-config-fallback.svg?branch=master)](https://travis-ci.org/unruly/java-config-fallback)
+[![Release Version](https://img.shields.io/maven-central/v/co.unruly/java-config-fallback.svg)](https://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22co.unruly%22%20AND%20a%3A%22java-config-fallback%22)
 
-A lightweight library to facilitate extracting configuration from code into configuration files.
+A lightweight library to query a hierarchy of configuration sources
 
-## Install from Maven Central
+```java
+Configuration config = Configuration.of(
+    secretsManager("my-secret-name", "eu-west-1"), // { "username": "user" }
+    properties("/etc/my-app-config.properties"),   // { "username": "anotherUser", "password": "secret" }
+);
+
+Optional<String> username = config.get("username"); // Optional[user]
+Optional<String> password = config.get("password"); // Optional[secret] 
+```
+
+## Contents
+
+- [Install](#install)
+- [Usage](#usage)
+  - [Fallback Behaviour](#fallback-behaviour)
+- [Supported Configuration Sources](#supported-configuration-sources)
+  - [Map](#map)
+  - [Properties](#properties)
+  - [Environment](#environment)
+  - [AWS Secrets Manager](#aws-secrets-manager)
+- [Extending with custom Configuration Sources](#extending-with-custom-configuration-sources)
+- [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
+  - [Getting Started](#getting-started)
+  - [Releasing a Change](#releasing-a-change)
+- [License](#license)
+- [Design Decisions](#design-decisions)
+
+## Install
+
+This library is available on Maven Central
 
 ```xml
 <dependency>
     <groupId>co.unruly</groupId>
     <artifactId>java-config-fallback</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.7</version>
 </dependency>
 ```
 
 ## Usage
 
-```java
-Map<String, String> credentials = new HashMap<>();
-credentials.put("username","foo");
-credentials.put("password","this-is-a-secret!");
+### Fallback Behaviour
 
+When queried for a key, a `Configuration` instance will query each `ConfigurationSource` passed to its builder **in order** until it finds a key.
+
+Example:
+
+```java
 Configuration config = Configuration.of(
-    properties("/etc/my-app-config.properties"),
-    map(credentials)
+    properties("high-priority-config.properties"),
+    properties("default.properties"),
+    environment()
 );
-
-// look in properties file first, else look in the map,
-// and if still not found, return Optional.empty()
-Optional<String> username = config.get("username"); 
 ```
 
-You can also provide a use-site default value:
+* This configuration will first look for a key in `high-priority-config.properties`.
+* If it is not there, it will then look for that key in `default.properties`
+* If it is not in either of those, then it will check the application's environment variables.
 
-```java
-String username = config.get("username", "Titus Andromedon");
-```
+Behaviour if a key cannot be retrieved from any of the provided sources (whether from missing key or missing file or network timeout) depends on the method used to query.
 
-Or state that a value is _required_, and throw a `ConfigurationMissing` exception if if is not defined:
+| Method       | Parameters                   | Success Behaviour                      | Failure Behaviour                              |
+|:-------------|:-----------------------------|:---------------------------------------|:-----------------------------------------------|
+| `.get()`     | `String key`                 | Returns `Optional<String>.of(<value>)` | Returns `Optional<String>.empty()`             |
+| `.get()`     | `String key, String default` | Returns `Optional<String>.of(<value>)` | Returns `Optional<String>.of(<default-value>)` |
+| `.require()` | `String key`                 | Returns `<value>` as a String          | Throws `ConfigurationMissing` exception        |
 
-```java
-String username = config.require("username");
-```
+## Supported Configuration Sources
 
-## Configuration Sources
+### Map
 
-### In-code map
-
-`map(Map<String, String>)` - an in-code map of keys to values
+The `.map()` configuration source takes a `Map<String, String>` as a datasource.
 
 ```java
 Map<String, String> credentials = new HashMap<>();
@@ -60,9 +90,9 @@ String username = config.get("username"); // Optional[foo]
 String password = config.get("password"); // Optional[this-is-a-secret!]
 ```
 
-### Properties file
+### Properties
 
-`properties(String pathToFile)` - a .properties file in the filesystem
+The `.properties()` configuration source takes a `String filePath` pointing to a `.properties` file as a datasource.
 
 ```java
 Configuration config = Configuration.of(
@@ -72,22 +102,87 @@ Configuration config = Configuration.of(
 String password = config.get("password"); // Optional[new-password]
 ```
 
-### Environment variables
+### Environment
 
-`environment()` - environment variables set for this application.
+The `.environment()` configuration source uses environment variables set for this application.
 
-This assumes environment variables are UPPER_CASE and converts queried keys to UPPER_CASE before lookup.
+**NOTE**: This assumes environment variables are UPPER_CASE and converts queried keys to UPPER_CASE before lookup.
 
 ```java
 // With VARIABLE=foo set
 
-Configuration config = Configuration.of(
-    environment()
-);
+Configuration config = Configuration.of(environment());
 
 String password = config.get("VARIABLE"); // Optional[foo]
 String password = config.get("variable"); // Same as above
 ```
+
+### AWS Secrets Manager
+
+The `.secretsManager()` configuration source uses AWS Secrets Manager as its datasource.
+
+This can be configured with:
+
+ * `.secretsManager(String secretName, String region)` - uses default AWS client to query Secrets Manager.
+ * `.secretsManager(String secretName, String region, AWSSecretsManager client)` - uses provided client to query Secrets Manager. Use this if you want to provide custom client behaviour e.g. using a specific set of credentials or instance-role.
+
+**NOTE**: This configuration source only supports key-value pairs as a return type - plaintext secrets will be ignored.
+
+```java
+Configuration config = Configuration.of(
+    secretsManager("my-secret", "eu-west-1") // { "username": "user", "password": "secret" }
+); 
+
+String password = config.get("username"); // Optional[user]
+String password = config.get("password"); // Optional[secret]
+```
+
+## Extending with custom Configuration Sources
+
+You can define your own sources of configuration by implementing the `ConfigurationSource` functional interface.
+
+The contract between this and the `Configuration` class is:
+ * A `ConfigurationSource` will not throw exceptions when queried.
+ * A `ConfigurationSource` will return `null` if the requested key cannot be found or other error occurs.
+ * A `ConfigurationSource` will return a `String` representing the value of a successful lookup.
+
+For example, a custom `ConfigurationSource` that returns a different random string every time it's queried:
+
+```java
+import java.util.UUID;
+
+public class RandomUUIDSource implements ConfigurationSource {
+    @Override
+    public String get(String key) {
+        return UUID.randomUUID().toString();
+    }
+}
+```
+
+**NOTE**: Don't actually do this.
+
+## Contributing
+
+### Code of Conduct
+
+Everyone interacting with this project is required to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+### Getting Started
+
+You'll need Maven and Java 8+ installed
+
+```bash
+$ git clone git@github.com:unruly/java-config-fallback.git
+$ mvn clean install
+```
+
+You can run `mvn clean test` in the project root to run JUnit tests.
+
+### Releasing a Change
+
+- To release a new version:
+  - Run `mvn release:prepare release:perform` - NOTE: this requires signing the release with a GPG key.
+
 ## Design Decisions
 
 There are already libraries (such as [properlty](https://github.com/ufoscout/properlty)) that do something very similar — why build our own?
@@ -108,3 +203,8 @@ Configuration config = Configuration.of(
  * **Do one thing well**: The library doesn’t coerce types (opting for String key, String value) or assume behaviour if a source cannot be queried (missing file or slow network call). This is up to the user to decide, and simplifies a lot of our other design choices.
  
  * **Eat our own dog-food**: This library is in use at Unruly, helping us transition our app configuration and advance our architecture. We don’t want to release anything we wouldn’t use ourselves.
+
+## License
+ 
+This project is available as open source under the terms of the [MIT License](./LICENSE).
+
