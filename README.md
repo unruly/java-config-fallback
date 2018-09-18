@@ -86,8 +86,8 @@ credentials.put("password","this-is-a-secret!");
 
 Configuration config = Configuration.of(map(credentials));
 
-String username = config.get("username"); // Optional[foo]
-String password = config.get("password"); // Optional[this-is-a-secret!]
+Optional<String> username = config.get("username"); // Optional[foo]
+Optional<String> password = config.get("password"); // Optional[this-is-a-secret!]
 ```
 
 ### Properties
@@ -99,7 +99,7 @@ Configuration config = Configuration.of(
     properties("/etc/my-app/config.properties"),  // password=new-password
 );
 
-String password = config.get("password"); // Optional[new-password]
+Optional<String> password = config.get("password"); // Optional[new-password]
 ```
 
 ### Environment
@@ -113,8 +113,8 @@ The `.environment()` configuration source uses environment variables set for thi
 
 Configuration config = Configuration.of(environment());
 
-String password = config.get("VARIABLE"); // Optional[foo]
-String password = config.get("variable"); // Same as above
+Optional<String> password = config.get("VARIABLE"); // Optional[foo]
+Optional<String> password = config.get("variable"); // Same as above
 ```
 
 ### AWS Secrets Manager
@@ -133,11 +133,11 @@ Configuration config = Configuration.of(
     secretsManager("my-secret", "eu-west-1") // { "username": "user", "password": "secret" }
 ); 
 
-String password = config.get("username"); // Optional[user]
-String password = config.get("password"); // Optional[secret]
+Optional<String> password = config.get("username"); // Optional[user]
+Optional<String> password = config.get("password"); // Optional[secret]
 ```
 
-## Extending with custom Configuration Sources
+## Adding custom Configuration Sources
 
 You can define your own sources of configuration by implementing the `ConfigurationSource` functional interface.
 
