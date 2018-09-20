@@ -65,6 +65,10 @@ public class Configuration {
         return properties::getProperty;
     }
 
+    public static ConfigurationSource systemProperties() {
+        return System::getProperty;
+    }
+
     public static ConfigurationSource environment() {
         return (key) -> System.getenv(key.toUpperCase());
     }

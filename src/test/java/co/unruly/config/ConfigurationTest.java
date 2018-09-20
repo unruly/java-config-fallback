@@ -165,4 +165,22 @@ public class ConfigurationTest {
         assertThat(config.get("pass"), is(empty()));
     }
 
+    @Test
+    public void shouldUseSystemProperties() {
+        System.setProperty("my.system.property", "my-value");
+
+        Configuration config = Configuration.of(systemProperties());
+
+        assertThat(config.get("my.system.property"), contains("my-value"));
+    }
+
+    @Test
+    public void shouldUseSystemProperties_BehavesCorrectlyWhenMissing() {
+        System.clearProperty("my.system.property");
+
+        Configuration config = Configuration.of(systemProperties());
+
+        assertThat(config.get("my.system.property"), is(empty()));
+    }
+
 }
