@@ -42,7 +42,7 @@ This library is available on Maven Central
 <dependency>
     <groupId>co.unruly</groupId>
     <artifactId>java-config-fallback</artifactId>
-    <version>0.1.7</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
