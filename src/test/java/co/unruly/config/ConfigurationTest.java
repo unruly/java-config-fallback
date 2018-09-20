@@ -175,7 +175,9 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void shouldUseSystemProperties_BehavesCorrectlyWhenMissing() {
+    public void shouldUseSystemProperties_isEmptyWhenMissing() {
+        // This is a separate test because we want to explicitly clear my.system.property
+        // Otherwise running e.g. `mvn clean test -Dmy.system.property=foo` would cause this test to fail
         System.clearProperty("my.system.property");
 
         Configuration config = Configuration.of(systemProperties());

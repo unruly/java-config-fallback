@@ -23,6 +23,7 @@ Optional<String> password = config.get("password"); // Optional[secret]
 - [Supported Configuration Sources](#supported-configuration-sources)
   - [Map](#map)
   - [Properties](#properties)
+  - [System Properties](#system-properties)
   - [Environment](#environment)
   - [AWS Secrets Manager](#aws-secrets-manager)
 - [Extending with custom Configuration Sources](#extending-with-custom-configuration-sources)
@@ -100,6 +101,22 @@ Configuration config = Configuration.of(
 );
 
 Optional<String> password = config.get("password"); // Optional[new-password]
+```
+
+### System Properties
+
+The `.systemProperties()` configuration source uses `System.getProperty()` as a datasource.
+
+```java
+Configuration config = Configuration.of(
+    systemProperties()
+);
+
+// Running code with `mvn clean test -Dmy.property=hello-world
+Optional<String> myProperty = config.get("my.property"); // Optional[hello-world]
+
+// Default system properties in every JVM
+Optional<String> javaVersion = config.get("java.version"); // Optional[1.8.0_12345]
 ```
 
 ### Environment
