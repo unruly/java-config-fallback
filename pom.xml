@@ -3,7 +3,7 @@
 
     <groupId>co.unruly</groupId>
     <artifactId>java-config-fallback</artifactId>
-    <version>0.1.8-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>java-config-fallback</name>
@@ -45,7 +45,7 @@
         <connection>scm:git:git@github.com:unruly/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:unruly/${project.artifactId}.git</developerConnection>
         <url>git@github.com:unruly/${project.artifactId}.git</url>
-        <tag>HEAD</tag>
+        <tag>java-config-fallback-1.0.0</tag>
     </scm>
 
     <dependencies>
