@@ -17,16 +17,18 @@ public class SecretsManager implements ConfigurationSource {
 
     private final String secretName;
     private final String region;
-    private final AWSSecretsManager client;
+    private final Optional<AWSSecretsManager> client;
     private Map<String, String> credentials;
 
     public SecretsManager(String secretName, String region) {
-        this.secretName = secretName;
-        this.region = region;
-        this.client = setupClient();
+        this(secretName, region, Optional.empty());
     }
 
     public SecretsManager(String secretName, String region, AWSSecretsManager client) {
+        this(secretName, region, Optional.of(client));
+    }
+
+    private SecretsManager(String secretName, String region, Optional<AWSSecretsManager> client) {
         this.secretName = secretName;
         this.region = region;
         this.client = client;
@@ -50,13 +52,6 @@ public class SecretsManager implements ConfigurationSource {
                 .orElse(emptyResults);
     }
 
-
-    private AWSSecretsManager setupClient() {
-        return AWSSecretsManagerClientBuilder.standard()
-                .withRegion(this.region)
-                .build();
-    }
-
     private Optional<GetSecretValueResult> getSecretValueFromRequest() {
         return getSecretValue(createRequest());
     }
@@ -67,10 +62,19 @@ public class SecretsManager implements ConfigurationSource {
 
     private Optional<GetSecretValueResult> getSecretValue(GetSecretValueRequest getSecretValueRequest) {
         try {
-            return Optional.ofNullable(client.getSecretValue(getSecretValueRequest));
+            return Optional.of(getOrCreateClient())
+                .map(client -> client.getSecretValue(getSecretValueRequest));
         } catch (ResourceNotFoundException e) {
             return Optional.empty();
         }
+    }
+
+    private AWSSecretsManager getOrCreateClient() {
+        return client.orElseGet(() -> (
+            AWSSecretsManagerClientBuilder.standard()
+                .withRegion(this.region)
+                .build()
+        ));
     }
 
     private Optional<Map<String, String>> parseJSON(String jsonInput) {
