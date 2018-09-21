@@ -142,6 +142,9 @@ This can be configured with:
 
  * `.secretsManager(String secretName, String region)` - uses default AWS client to query Secrets Manager.
  * `.secretsManager(String secretName, String region, AWSSecretsManager client)` - uses provided client to query Secrets Manager. Use this if you want to provide custom client behaviour e.g. using a specific set of credentials or instance-role.
+ 
+Secrets are only requested from AWS the first time they're accessed. Subsequent
+requests using the same configuration will use a cached response.
 
 **NOTE**: This configuration source only supports key-value pairs as a return type - plaintext secrets will be ignored.
 
