@@ -7,8 +7,8 @@ A lightweight library to query a hierarchy of configuration sources
 
 ```java
 Configuration config = Configuration.of(
-    secretsManager("my-secret-name", "eu-west-1"), // { "username": "user" }
-    properties("/etc/my-app-config.properties"),   // { "username": "anotherUser", "password": "secret" }
+    secretsManager("my-secret-name", "eu-west-1"), // { "username": "user", "password": "secret" }
+    properties("/etc/my-app-config.properties"),   // { "username": "anotherUser" }
 );
 
 Optional<String> username = config.get("username"); // Optional[user]
